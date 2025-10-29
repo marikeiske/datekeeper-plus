@@ -8,89 +8,138 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Base colors */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
+    /* Card colors */
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
 
+    /* Popover colors */
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Vibrant Purple */
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 262 90% 70%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Soft Blue */
+    --secondary: 210 100% 96%;
+    --secondary-foreground: 262 83% 58%;
 
+    /* Muted colors */
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Bright Cyan */
+    --accent: 188 94% 60%;
+    --accent-foreground: 0 0% 100%;
 
+    /* Success - Fresh Green */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning - Warm Orange */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Destructive - Bold Red */
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
+    /* Border and input */
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 262 83% 58%;
 
-    --radius: 0.5rem;
+    /* Radius */
+    --radius: 1rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Calendar specific colors */
+    --calendar-today: 262 83% 58%;
+    --calendar-event: 188 94% 60%;
+    --calendar-holiday: 0 84% 60%;
+    --calendar-weekend: 210 40% 98%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%), hsl(262 90% 70%));
+    --gradient-accent: linear-gradient(135deg, hsl(188 94% 60%), hsl(200 100% 70%));
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 50%));
+    
+    /* Shadows */
+    --shadow-primary: 0 10px 30px -10px hsl(262 83% 58% / 0.3);
+    --shadow-accent: 0 10px 30px -10px hsl(188 94% 60% / 0.3);
+    --shadow-card: 0 4px 16px hsl(222.2 84% 4.9% / 0.08);
 
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
+    /* Base colors */
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    /* Card colors */
+    --card: 217.2 32.6% 12%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    /* Popover colors */
+    --popover: 217.2 32.6% 12%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Primary - Vibrant Purple (slightly lighter for dark mode) */
+    --primary: 262 90% 65%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --primary-glow: 262 95% 75%;
 
+    /* Secondary */
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
 
+    /* Muted */
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Accent - Bright Cyan */
+    --accent: 188 94% 65%;
+    --accent-foreground: 222.2 84% 4.9%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    /* Success */
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 100%;
 
+    /* Warning */
+    --warning: 38 92% 60%;
+    --warning-foreground: 222.2 84% 4.9%;
+
+    /* Destructive */
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border and input */
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: 262 90% 65%;
+
+    /* Calendar specific colors */
+    --calendar-today: 262 90% 65%;
+    --calendar-event: 188 94% 65%;
+    --calendar-holiday: 0 84% 65%;
+    --calendar-weekend: 217.2 32.6% 17.5%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(262 90% 65%), hsl(262 95% 75%));
+    --gradient-accent: linear-gradient(135deg, hsl(188 94% 65%), hsl(200 100% 75%));
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 45%), hsl(142 76% 60%));
+    
+    /* Shadows */
+    --shadow-primary: 0 10px 30px -10px hsl(262 90% 65% / 0.4);
+    --shadow-accent: 0 10px 30px -10px hsl(188 94% 65% / 0.4);
+    --shadow-card: 0 4px 16px hsl(0 0% 0% / 0.3);
   }
 }
 
