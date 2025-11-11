@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarGrid } from "@/components/Calendar/CalendarGrid";
 import { EventList } from "@/components/Calendar/EventList";
 import { Calendar, ChevronLeft, ChevronRight, LogOut, Plus, Settings } from "lucide-react";
-import { format, addMonths, subMonths, startOfDay, endOfDay, isSameDay } from "date-fns";
+import { format, addMonths, subMonths, startOfDay, endOfDay, isSameDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
@@ -86,6 +86,10 @@ const Index = () => {
     isSameDay(new Date(event.start_date), selectedDate)
   );
 
+  const selectedDateHolidays = holidays.filter(holiday =>
+    isSameDay(parseISO(holiday.date), selectedDate)
+  );
+
   if (loading || loadingData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -159,6 +163,7 @@ const Index = () => {
         <div className="mt-6">
           <EventList
             events={selectedDateEvents}
+            holidays={selectedDateHolidays}
             selectedDate={selectedDate}
             onDeleteEvent={handleDeleteEvent}
           />

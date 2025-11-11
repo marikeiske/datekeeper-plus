@@ -1,4 +1,4 @@
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, startOfWeek, endOfWeek } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay, startOfWeek, endOfWeek, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +42,7 @@ export const CalendarGrid = ({
 
   const getHolidayForDay = (date: Date) => {
     return holidays.find(holiday => 
-      isSameDay(new Date(holiday.date), date)
+      isSameDay(parseISO(holiday.date), date)
     );
   };
 
