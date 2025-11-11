@@ -115,18 +115,21 @@ export type Database = {
           event_id: string
           id: string
           minutes_before: number
+          notification_sent: boolean
         }
         Insert: {
           created_at?: string
           event_id: string
           id?: string
           minutes_before: number
+          notification_sent?: boolean
         }
         Update: {
           created_at?: string
           event_id?: string
           id?: string
           minutes_before?: number
+          notification_sent?: boolean
         }
         Relationships: [
           {
@@ -143,7 +146,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_pending_reminders: {
+        Args: never
+        Returns: {
+          event_description: string
+          event_id: string
+          event_start_date: string
+          event_title: string
+          minutes_before: number
+          reminder_id: string
+          user_email: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
