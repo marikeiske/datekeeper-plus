@@ -7,10 +7,12 @@ import { CalendarGrid } from "@/components/Calendar/CalendarGrid";
 import { EventList } from "@/components/Calendar/EventList";
 import { SearchAndFilters } from "@/components/Calendar/SearchAndFilters";
 import { SearchResults } from "@/components/Calendar/SearchResults";
-import { Calendar, ChevronLeft, ChevronRight, LogOut, Plus, Settings } from "lucide-react";
-import { format, addMonths, subMonths, startOfDay, endOfDay, isSameDay, parseISO, startOfMonth, endOfMonth } from "date-fns";
+import { WeekView } from "@/components/Calendar/WeekView";
+import { Calendar, ChevronLeft, ChevronRight, LogOut, Plus, Settings, CalendarDays } from "lucide-react";
+import { format, addMonths, subMonths, startOfDay, endOfDay, isSameDay, parseISO, startOfMonth, endOfMonth, addWeeks, subWeeks, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
@@ -25,6 +27,7 @@ const Index = () => {
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [eventReminders, setEventReminders] = useState<Record<string, number>>({});
+  const [viewMode, setViewMode] = useState<"month" | "week">("month");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -38,7 +41,7 @@ const Index = () => {
       fetchHolidays();
       fetchReminders();
     }
-  }, [user, currentDate]);
+  }, [user, currentDate, viewMode]);
 
   useEffect(() => {
     // Show search results view when filters are active
@@ -62,8 +65,13 @@ const Index = () => {
 
   const fetchEvents = async () => {
     try {
-      const monthStart = startOfMonth(currentDate);
-      const monthEnd = endOfMonth(currentDate);
+      const rangeStart = viewMode === "month" 
+        ? startOfMonth(currentDate)
+        : startOfWeek(currentDate, { locale: ptBR });
+      
+      const rangeEnd = viewMode === "month"
+        ? endOfMonth(currentDate)
+        : endOfWeek(currentDate, { locale: ptBR });
 
       // Fetch regular events
       const { data: regularEvents, error: eventsError } = await supabase
@@ -71,8 +79,8 @@ const Index = () => {
         .select("*")
         .eq("user_id", user?.id)
         .eq("is_recurring", false)
-        .gte("start_date", monthStart.toISOString())
-        .lte("start_date", monthEnd.toISOString())
+        .gte("start_date", rangeStart.toISOString())
+        .lte("start_date", rangeEnd.toISOString())
         .order("start_date", { ascending: true });
 
       if (eventsError) throw eventsError;
@@ -80,8 +88,8 @@ const Index = () => {
       // Fetch recurring events using the database function
       const { data: recurringEvents, error: recurringError } = await supabase
         .rpc("get_recurring_events", {
-          start_range: monthStart.toISOString(),
-          end_range: monthEnd.toISOString(),
+          start_range: rangeStart.toISOString(),
+          end_range: rangeEnd.toISOString(),
           p_user_id: user?.id,
         });
 
@@ -182,6 +190,37 @@ const Index = () => {
     setDateRange({ start: "", end: "" });
   };
 
+  const handleNavigatePrevious = () => {
+    if (viewMode === "month") {
+      setCurrentDate(subMonths(currentDate, 1));
+    } else {
+      setCurrentDate(subWeeks(currentDate, 1));
+    }
+  };
+
+  const handleNavigateNext = () => {
+    if (viewMode === "month") {
+      setCurrentDate(addMonths(currentDate, 1));
+    } else {
+      setCurrentDate(addWeeks(currentDate, 1));
+    }
+  };
+
+  const getDisplayTitle = () => {
+    if (viewMode === "month") {
+      return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
+    } else {
+      const weekStart = startOfWeek(currentDate, { locale: ptBR });
+      const weekEnd = endOfWeek(currentDate, { locale: ptBR });
+      
+      if (weekStart.getMonth() === weekEnd.getMonth()) {
+        return `${format(weekStart, "d")} - ${format(weekEnd, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
+      } else {
+        return `${format(weekStart, "d 'de' MMM", { locale: ptBR })} - ${format(weekEnd, "d 'de' MMM 'de' yyyy", { locale: ptBR })}`;
+      }
+    }
+  };
+
   // Filter events based on search and filters
   const filteredEvents = events.filter(event => {
     // Search query filter
@@ -273,21 +312,49 @@ const Index = () => {
         </div>
 
         {/* Month Navigation */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setCurrentDate(subMonths(currentDate, 1))}
+            onClick={handleNavigatePrevious}
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <h2 className="text-2xl font-bold capitalize">
-            {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
-          </h2>
+          
+          <div className="flex flex-col items-center gap-2 flex-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold capitalize text-center">
+                {getDisplayTitle()}
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentDate(new Date())}
+                className="text-xs"
+              >
+                Hoje
+              </Button>
+            </div>
+            
+            {/* View Mode Toggle */}
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "month" | "week")} className="w-full max-w-xs">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="month" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden sm:inline">Mensal</span>
+                </TabsTrigger>
+                <TabsTrigger value="week" className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4" />
+                  <span className="hidden sm:inline">Semanal</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+            onClick={handleNavigateNext}
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
@@ -315,6 +382,13 @@ const Index = () => {
                 setShowSearchResults(false);
                 handleClearFilters();
               }}
+              eventReminders={eventReminders}
+            />
+          ) : viewMode === "week" ? (
+            <WeekView
+              currentDate={currentDate}
+              events={filteredEvents}
+              onDayClick={setSelectedDate}
               eventReminders={eventReminders}
             />
           ) : (

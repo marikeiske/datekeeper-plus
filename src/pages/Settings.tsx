@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calendar, RefreshCw, Moon, Sun, Download, Bell } from "lucide-react";
+import { ArrowLeft, Calendar, RefreshCw, Moon, Sun, Download, Bell, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 
 const Settings = () => {
@@ -249,6 +249,44 @@ const Settings = () => {
               <p className="text-xs text-muted-foreground">
                 💡 <strong>Dica:</strong> Eventos recorrentes aparecem com o ícone 🔄 no calendário
               </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Calendar Views Info Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Visualizações do Calendário</CardTitle>
+            <CardDescription>
+              Diferentes formas de ver seus eventos
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2 text-sm">
+              <div className="flex items-start gap-2">
+                <Calendar className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium">Vista Mensal</p>
+                  <p className="text-xs text-muted-foreground">Veja todos os eventos do mês em uma grade</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <CalendarDays className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium">Vista Semanal</p>
+                  <p className="text-xs text-muted-foreground">Visualize eventos com horários detalhados da semana</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-accent/10 p-3 rounded-lg space-y-1">
+              <p className="text-xs text-muted-foreground">
+                💡 <strong>Atalhos:</strong>
+              </p>
+              <ul className="text-xs text-muted-foreground space-y-0.5 ml-4">
+                <li>• Clique no botão "Hoje" para voltar à data atual</li>
+                <li>• Use as setas para navegar entre períodos</li>
+                <li>• Pressione Ctrl+K para buscar rapidamente</li>
+              </ul>
             </div>
           </CardContent>
         </Card>
