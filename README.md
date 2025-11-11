@@ -44,7 +44,6 @@ npm run dev
 This project is built with:
 
 - Vite
-- TypeScript
-- React
+- React Native
 - shadcn-ui
 - Tailwind CSS
