@@ -3,7 +3,7 @@ import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Edit, Trash2, Bell } from "lucide-react";
+import { Calendar, Clock, Edit, Trash2, Bell, Repeat } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,7 @@ interface Event {
   end_date: string;
   color: string;
   is_all_day: boolean;
+  is_recurring?: boolean;
 }
 
 interface Holiday {
@@ -108,6 +109,11 @@ export const EventList = ({ events, holidays, selectedDate, onDeleteEvent }: Eve
             <CardTitle className="text-base flex items-start justify-between">
               <div className="flex items-center gap-2 flex-1">
                 <span>{event.title}</span>
+                {event.is_recurring && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Repeat className="h-3 w-3" />
+                  </Badge>
+                )}
                 {eventReminders[event.id] && (
                   <Badge variant="secondary" className="flex items-center gap-1">
                     <Bell className="h-3 w-3" />

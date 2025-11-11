@@ -206,6 +206,53 @@ const Settings = () => {
           </CardContent>
         </Card>
 
+        {/* Recurring Events Info Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Eventos Recorrentes</CardTitle>
+            <CardDescription>
+              Crie eventos que se repetem automaticamente
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2 text-sm">
+              <div className="flex items-start gap-2">
+                <span className="text-base">📅</span>
+                <div>
+                  <p className="font-medium">Diariamente</p>
+                  <p className="text-xs text-muted-foreground">O evento repete todo dia</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-base">📆</span>
+                <div>
+                  <p className="font-medium">Semanalmente</p>
+                  <p className="text-xs text-muted-foreground">Repete toda semana no mesmo dia</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-base">🗓️</span>
+                <div>
+                  <p className="font-medium">Mensalmente</p>
+                  <p className="text-xs text-muted-foreground">Repete todo mês no mesmo dia</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-base">🎂</span>
+                <div>
+                  <p className="font-medium">Anualmente</p>
+                  <p className="text-xs text-muted-foreground">Ideal para aniversários e datas especiais</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-accent/10 p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground">
+                💡 <strong>Dica:</strong> Eventos recorrentes aparecem com o ícone 🔄 no calendário
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Holidays Sync Card */}
         <Card>
           <CardHeader>

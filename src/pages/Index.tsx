@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarGrid } from "@/components/Calendar/CalendarGrid";
 import { EventList } from "@/components/Calendar/EventList";
 import { Calendar, ChevronLeft, ChevronRight, LogOut, Plus, Settings } from "lucide-react";
-import { format, addMonths, subMonths, startOfDay, endOfDay, isSameDay, parseISO } from "date-fns";
+import { format, addMonths, subMonths, startOfDay, endOfDay, isSameDay, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
@@ -34,14 +34,40 @@ const Index = () => {
 
   const fetchEvents = async () => {
     try {
-      const { data, error } = await supabase
+      const monthStart = startOfMonth(currentDate);
+      const monthEnd = endOfMonth(currentDate);
+
+      // Fetch regular events
+      const { data: regularEvents, error: eventsError } = await supabase
         .from("events")
         .select("*")
         .eq("user_id", user?.id)
+        .eq("is_recurring", false)
+        .gte("start_date", monthStart.toISOString())
+        .lte("start_date", monthEnd.toISOString())
         .order("start_date", { ascending: true });
 
-      if (error) throw error;
-      setEvents(data || []);
+      if (eventsError) throw eventsError;
+
+      // Fetch recurring events using the database function
+      const { data: recurringEvents, error: recurringError } = await supabase
+        .rpc("get_recurring_events", {
+          start_range: monthStart.toISOString(),
+          end_range: monthEnd.toISOString(),
+          p_user_id: user?.id,
+        });
+
+      if (recurringError) {
+        console.error("Error fetching recurring events:", recurringError);
+      }
+
+      // Combine both types of events
+      const allEvents = [
+        ...(regularEvents || []),
+        ...(recurringEvents || []),
+      ];
+
+      setEvents(allEvents);
     } catch (error: any) {
       toast.error("Erro ao carregar eventos");
       console.error(error);

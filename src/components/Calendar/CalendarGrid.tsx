@@ -9,6 +9,7 @@ interface CalendarGridProps {
     title: string;
     start_date: string;
     color: string;
+    is_recurring?: boolean;
   }>;
   holidays: Array<{
     id: string;
@@ -102,14 +103,15 @@ export const CalendarGrid = ({
                 {dayEvents.slice(0, 2).map((event) => (
                   <div
                     key={event.id}
-                    className="text-xs truncate px-1 py-0.5 rounded"
+                    className="text-xs truncate px-1 py-0.5 rounded flex items-center gap-1"
                     style={{ 
                       backgroundColor: `${event.color}20`,
                       color: event.color,
                     }}
                     title={event.title}
                   >
-                    {event.title}
+                    {event.is_recurring && <span className="text-[10px]">🔄</span>}
+                    <span className="truncate">{event.title}</span>
                   </div>
                 ))}
                 {dayEvents.length > 2 && (

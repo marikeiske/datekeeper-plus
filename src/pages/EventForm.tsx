@@ -35,6 +35,14 @@ const REMINDER_OPTIONS = [
   { label: "1 semana antes", value: "10080" },
 ];
 
+const RECURRENCE_OPTIONS = [
+  { label: "Não repetir", value: "none" },
+  { label: "Diariamente", value: "daily" },
+  { label: "Semanalmente", value: "weekly" },
+  { label: "Mensalmente", value: "monthly" },
+  { label: "Anualmente", value: "yearly" },
+];
+
 const EventForm = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -49,6 +57,8 @@ const EventForm = () => {
   const [color, setColor] = useState(EVENT_COLORS[0].value);
   const [isAllDay, setIsAllDay] = useState(false);
   const [reminder, setReminder] = useState("0");
+  const [recurrence, setRecurrence] = useState("none");
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -94,6 +104,24 @@ const EventForm = () => {
       if (reminders && reminders.length > 0) {
         setReminder(reminders[0].minutes_before.toString());
       }
+
+      // Fetch recurrence rules
+      if (event.is_recurring) {
+        const { data: recurrenceRules, error: recurrenceError } = await supabase
+          .from("recurrence_rules")
+          .select("*")
+          .eq("event_id", id)
+          .single();
+
+        if (recurrenceError) {
+          console.error("Error fetching recurrence:", recurrenceError);
+        } else if (recurrenceRules) {
+          setRecurrence(recurrenceRules.frequency);
+          if (recurrenceRules.end_date) {
+            setRecurrenceEndDate(format(new Date(recurrenceRules.end_date), "yyyy-MM-dd"));
+          }
+        }
+      }
     } catch (error: any) {
       toast.error("Erro ao carregar evento");
       console.error(error);
@@ -120,6 +148,7 @@ const EventForm = () => {
         end_date: endDateTime.toISOString(),
         color,
         is_all_day: isAllDay,
+        is_recurring: recurrence !== "none",
         user_id: user?.id,
       };
 
@@ -134,8 +163,9 @@ const EventForm = () => {
 
         if (error) throw error;
 
-        // Delete existing reminders
+        // Delete existing reminders and recurrence rules
         await supabase.from("reminders").delete().eq("event_id", id);
+        await supabase.from("recurrence_rules").delete().eq("event_id", id);
       } else {
         // Create new event
         const { data, error } = await supabase
@@ -146,6 +176,25 @@ const EventForm = () => {
 
         if (error) throw error;
         eventId = data.id;
+      }
+
+      // Add recurrence rule if selected
+      if (recurrence !== "none" && eventId) {
+        const recurrenceData: any = {
+          event_id: eventId,
+          frequency: recurrence,
+          interval: 1,
+        };
+
+        if (recurrenceEndDate) {
+          recurrenceData.end_date = new Date(recurrenceEndDate).toISOString();
+        }
+
+        const { error: recurrenceError } = await supabase
+          .from("recurrence_rules")
+          .insert([recurrenceData]);
+
+        if (recurrenceError) throw recurrenceError;
       }
 
       // Add reminder if selected
@@ -297,6 +346,48 @@ const EventForm = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="recurrence">Repetir</Label>
+                <Select value={recurrence} onValueChange={setRecurrence}>
+                  <SelectTrigger id="recurrence">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    {RECURRENCE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.value === "none" && "🚫 "}
+                        {option.value === "daily" && "📅 "}
+                        {option.value === "weekly" && "📆 "}
+                        {option.value === "monthly" && "🗓️ "}
+                        {option.value === "yearly" && "🎂 "}
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {recurrence !== "none" && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    🔄 Este evento se repetirá automaticamente
+                  </p>
+                )}
+              </div>
+
+              {recurrence !== "none" && (
+                <div className="space-y-2">
+                  <Label htmlFor="recurrence-end">Repetir até (opcional)</Label>
+                  <Input
+                    id="recurrence-end"
+                    type="date"
+                    value={recurrenceEndDate}
+                    onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                    min={startDate}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Deixe em branco para repetir indefinidamente
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-4">
                 <Button

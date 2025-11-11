@@ -22,6 +22,7 @@ export type Database = {
           end_date: string
           id: string
           is_all_day: boolean
+          is_recurring: boolean
           start_date: string
           title: string
           updated_at: string
@@ -34,6 +35,7 @@ export type Database = {
           end_date: string
           id?: string
           is_all_day?: boolean
+          is_recurring?: boolean
           start_date: string
           title: string
           updated_at?: string
@@ -46,6 +48,7 @@ export type Database = {
           end_date?: string
           id?: string
           is_all_day?: boolean
+          is_recurring?: boolean
           start_date?: string
           title?: string
           updated_at?: string
@@ -109,6 +112,53 @@ export type Database = {
         }
         Relationships: []
       }
+      recurrence_rules: {
+        Row: {
+          created_at: string
+          day_of_month: number | null
+          days_of_week: number[] | null
+          end_date: string | null
+          event_id: string
+          frequency: Database["public"]["Enums"]["recurrence_frequency"]
+          id: string
+          interval: number
+          month_of_year: number | null
+          occurrences: number | null
+        }
+        Insert: {
+          created_at?: string
+          day_of_month?: number | null
+          days_of_week?: number[] | null
+          end_date?: string | null
+          event_id: string
+          frequency: Database["public"]["Enums"]["recurrence_frequency"]
+          id?: string
+          interval?: number
+          month_of_year?: number | null
+          occurrences?: number | null
+        }
+        Update: {
+          created_at?: string
+          day_of_month?: number | null
+          days_of_week?: number[] | null
+          end_date?: string | null
+          event_id?: string
+          frequency?: Database["public"]["Enums"]["recurrence_frequency"]
+          id?: string
+          interval?: number
+          month_of_year?: number | null
+          occurrences?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurrence_rules_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reminders: {
         Row: {
           created_at: string
@@ -158,9 +208,23 @@ export type Database = {
           user_email: string
         }[]
       }
+      get_recurring_events: {
+        Args: { end_range: string; p_user_id: string; start_range: string }
+        Returns: {
+          color: string
+          description: string
+          end_date: string
+          id: string
+          is_all_day: boolean
+          is_recurring: boolean
+          parent_event_id: string
+          start_date: string
+          title: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      recurrence_frequency: "daily" | "weekly" | "monthly" | "yearly"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -287,6 +351,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      recurrence_frequency: ["daily", "weekly", "monthly", "yearly"],
+    },
   },
 } as const
