@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CalendarGrid } from "@/components/Calendar/CalendarGrid";
 import { EventList } from "@/components/Calendar/EventList";
+import { SearchAndFilters } from "@/components/Calendar/SearchAndFilters";
+import { SearchResults } from "@/components/Calendar/SearchResults";
 import { Calendar, ChevronLeft, ChevronRight, LogOut, Plus, Settings } from "lucide-react";
 import { format, addMonths, subMonths, startOfDay, endOfDay, isSameDay, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -18,6 +20,11 @@ const Index = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [holidays, setHolidays] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [eventReminders, setEventReminders] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!loading && !user) {
@@ -29,8 +36,29 @@ const Index = () => {
     if (user) {
       fetchEvents();
       fetchHolidays();
+      fetchReminders();
     }
   }, [user, currentDate]);
+
+  useEffect(() => {
+    // Show search results view when filters are active
+    const hasActiveFilters = Boolean(searchQuery || selectedColors.length > 0 || dateRange.start || dateRange.end);
+    setShowSearchResults(hasActiveFilters);
+  }, [searchQuery, selectedColors, dateRange]);
+
+  useEffect(() => {
+    // Keyboard shortcut: Ctrl+K or Cmd+K to focus search
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+        searchInput?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const fetchEvents = async () => {
     try {
@@ -91,6 +119,27 @@ const Index = () => {
     }
   };
 
+  const fetchReminders = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("reminders")
+        .select("event_id, minutes_before, events!inner(user_id)")
+        .eq("events.user_id", user.id);
+
+      if (!error && data) {
+        const remindersMap: Record<string, number> = {};
+        data.forEach((r: any) => {
+          remindersMap[r.event_id] = r.minutes_before;
+        });
+        setEventReminders(remindersMap);
+      }
+    } catch (error) {
+      console.error("Error fetching reminders:", error);
+    }
+  };
+
   const handleDeleteEvent = async (eventId: string) => {
     try {
       const { error } = await supabase
@@ -108,7 +157,57 @@ const Index = () => {
     }
   };
 
-  const selectedDateEvents = events.filter(event =>
+  const EVENT_COLORS = [
+    { name: "Azul", value: "#3b82f6" },
+    { name: "Roxo", value: "#8b5cf6" },
+    { name: "Rosa", value: "#ec4899" },
+    { name: "Verde", value: "#10b981" },
+    { name: "Amarelo", value: "#f59e0b" },
+    { name: "Vermelho", value: "#ef4444" },
+    { name: "Ciano", value: "#06b6d4" },
+    { name: "Laranja", value: "#f97316" },
+  ];
+
+  const handleColorToggle = (color: string) => {
+    setSelectedColors(prev => 
+      prev.includes(color) 
+        ? prev.filter(c => c !== color)
+        : [...prev, color]
+    );
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setSelectedColors([]);
+    setDateRange({ start: "", end: "" });
+  };
+
+  // Filter events based on search and filters
+  const filteredEvents = events.filter(event => {
+    // Search query filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesTitle = event.title?.toLowerCase().includes(query);
+      const matchesDescription = event.description?.toLowerCase().includes(query);
+      if (!matchesTitle && !matchesDescription) return false;
+    }
+
+    // Color filter
+    if (selectedColors.length > 0) {
+      if (!selectedColors.includes(event.color)) return false;
+    }
+
+    // Date range filter
+    if (dateRange.start || dateRange.end) {
+      const eventDate = new Date(event.start_date);
+      if (dateRange.start && eventDate < new Date(dateRange.start)) return false;
+      if (dateRange.end && eventDate > new Date(dateRange.end)) return false;
+    }
+
+    return true;
+  });
+
+  const selectedDateEvents = filteredEvents.filter(event =>
     isSameDay(new Date(event.start_date), selectedDate)
   );
 
@@ -155,8 +254,26 @@ const Index = () => {
       </header>
 
       {/* Calendar Navigation */}
-      <div className="container max-w-4xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="container max-w-4xl mx-auto px-4 py-6 space-y-4">
+        {/* Search and Filters */}
+        <div className="relative">
+          <SearchAndFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedColors={selectedColors}
+            onColorToggle={handleColorToggle}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            onClearFilters={handleClearFilters}
+            availableColors={EVENT_COLORS}
+          />
+          <div className="absolute -top-2 right-0 text-xs text-muted-foreground bg-background px-2 py-0.5 rounded border">
+            ⌘K / Ctrl+K
+          </div>
+        </div>
+
+        {/* Month Navigation */}
+        <div className="flex items-center justify-between">
           <Button
             variant="outline"
             size="icon"
@@ -176,23 +293,51 @@ const Index = () => {
           </Button>
         </div>
 
-        {/* Calendar Grid */}
-        <CalendarGrid
-          currentDate={currentDate}
-          events={events}
-          holidays={holidays}
-          onDayClick={setSelectedDate}
-          selectedDate={selectedDate}
-        />
+        {/* Results count */}
+        {(searchQuery || selectedColors.length > 0 || dateRange.start || dateRange.end) && (
+          <div className="text-sm text-muted-foreground text-center bg-accent/10 py-2 px-4 rounded-lg">
+            {filteredEvents.length === 0 
+              ? "Nenhum evento encontrado com os filtros aplicados"
+              : `${filteredEvents.length} evento(s) encontrado(s)`
+            }
+          </div>
+        )}
 
-        {/* Events List */}
-        <div className="mt-6">
-          <EventList
-            events={selectedDateEvents}
-            holidays={selectedDateHolidays}
-            selectedDate={selectedDate}
-            onDeleteEvent={handleDeleteEvent}
-          />
+        {/* Calendar Grid or Search Results */}
+        <div className="animate-fade-in">
+          {showSearchResults ? (
+            <SearchResults
+              events={filteredEvents}
+              onDeleteEvent={handleDeleteEvent}
+              onSelectDate={(date) => {
+                setSelectedDate(date);
+                setCurrentDate(date);
+                setShowSearchResults(false);
+                handleClearFilters();
+              }}
+              eventReminders={eventReminders}
+            />
+          ) : (
+            <>
+              <CalendarGrid
+                currentDate={currentDate}
+                events={filteredEvents}
+                holidays={holidays}
+                onDayClick={setSelectedDate}
+                selectedDate={selectedDate}
+              />
+
+              {/* Events List */}
+              <div className="mt-6">
+                <EventList
+                  events={selectedDateEvents}
+                  holidays={selectedDateHolidays}
+                  selectedDate={selectedDate}
+                  onDeleteEvent={handleDeleteEvent}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
