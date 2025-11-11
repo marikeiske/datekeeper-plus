@@ -4,17 +4,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calendar, RefreshCw, Moon, Sun, Download } from "lucide-react";
+import { ArrowLeft, Calendar, RefreshCw, Moon, Sun, Download, Bell } from "lucide-react";
 import { toast } from "sonner";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [syncing, setSyncing] = useState(false);
+  const [testingNotifications, setTestingNotifications] = useState(false);
   const [stats, setStats] = useState({
     totalEvents: 0,
     upcomingEvents: 0,
     holidaysCount: 0,
+    pendingReminders: 0,
   });
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
@@ -50,10 +52,18 @@ const Settings = () => {
         .select("*", { count: "exact", head: true })
         .eq("country", "BR");
 
+      // Pending reminders count
+      const { count: pendingCount } = await supabase
+        .from("reminders")
+        .select("*, events!inner(*)", { count: "exact", head: true })
+        .eq("notification_sent", false)
+        .eq("events.user_id", user?.id);
+
       setStats({
         totalEvents: totalCount || 0,
         upcomingEvents: upcomingCount || 0,
         holidaysCount: holidaysCount || 0,
+        pendingReminders: pendingCount || 0,
       });
     } catch (error) {
       console.error("Erro ao carregar estatísticas:", error);
@@ -98,6 +108,25 @@ const Settings = () => {
     toast.success(`Tema ${newTheme === "dark" ? "escuro" : "claro"} ativado`);
   };
 
+  const testNotifications = async () => {
+    setTestingNotifications(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-reminders", {
+        body: {},
+      });
+
+      if (error) throw error;
+
+      toast.success(`Teste concluído! ${data?.count || 0} notificações processadas`);
+      fetchStats();
+    } catch (error: any) {
+      toast.error("Erro ao testar notificações");
+      console.error(error);
+    } finally {
+      setTestingNotifications(false);
+    }
+  };
+
   const installPWA = () => {
     toast.info("Para instalar: toque no botão de compartilhar e selecione 'Adicionar à Tela Inicial'");
   };
@@ -135,6 +164,45 @@ const Settings = () => {
               <span className="text-muted-foreground">Feriados sincronizados</span>
               <span className="text-2xl font-bold text-success">{stats.holidaysCount}</span>
             </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Lembretes pendentes</span>
+              <span className="text-2xl font-bold text-warning">{stats.pendingReminders}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notifications Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Notificações Automáticas</CardTitle>
+            <CardDescription>
+              Sistema de lembretes por email configurado
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-primary/10 p-4 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Bell className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm">Sistema ativo</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Os lembretes configurados nos seus eventos serão enviados automaticamente por email.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <Button
+              onClick={testNotifications}
+              disabled={testingNotifications}
+              className="w-full"
+              variant="outline"
+            >
+              <Bell className={`h-4 w-4 mr-2 ${testingNotifications ? "animate-pulse" : ""}`} />
+              {testingNotifications ? "Processando..." : "Testar Notificações Agora"}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Clique para processar lembretes pendentes imediatamente
+            </p>
           </CardContent>
         </Card>
 
